@@ -1,42 +1,86 @@
-using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine;
 
 public class NavigationManager : MonoBehaviour
 {
-    public POIManager poiManager;
-    public NavigationGraph graph;
-    public LineRenderer lineRenderer;
+    public static NavigationManager Instance;
 
-    void Start()
+    [Header("References")]
+    public NavigationGraph graph;        // Your graph object
+    public PathRenderer pathRenderer;    // Handles arrow spawning
+
+    private void Awake()
     {
-        lineRenderer.positionCount = 0;
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
     }
 
-    public void NavigateTo(string targetName)
+    /// <summary>
+    /// Called when user selects a POI from ScrollView
+    /// </summary>
+    public void NavigateTo(Transform destinationPOI)
     {
-        POI targetPOI = poiManager.GetPOI(targetName);
-
-        if (targetPOI == null)
+        if (graph == null)
         {
-            Debug.LogError("POI NOT FOUND: " + targetName);
+            Debug.LogError("NavigationGraph reference missing in NavigationManager!");
+            return;
+        }
+        if (pathRenderer == null)
+        {
+            Debug.LogError("PathRenderer reference missing in NavigationManager!");
             return;
         }
 
-        NavigationNode start = graph.GetNearestNode(Camera.main.transform.position);
-        NavigationNode end = graph.GetNearestNode(targetPOI.transform.position);
+        // Step 1 — Find nearest node to the user (AR Camera)
+        int startIndex = FindNearestNode(Camera.main.transform.position);
 
-        List<NavigationNode> path = graph.FindPath(start, end);
+        // Step 2 — Find the graph node connected to this POI
+        int endIndex = graph.GetNodeIndexFromPOI(destinationPOI);
 
-        DrawPath(path);
+        if (endIndex == -1)
+        {
+            Debug.LogError("No node linked to POI: " + destinationPOI.name);
+            return;
+        }
+
+        // Step 3 — Get shortest path from Graph
+        List<int> path = graph.FindPath(startIndex, endIndex);
+
+        if (path == null || path.Count == 0)
+        {
+            Debug.LogWarning("No valid path found!");
+            return;
+        }
+
+        // Step 4 — Convert node list to world positions
+        List<Vector3> worldPoints = new List<Vector3>();
+        foreach (int nodeIndex in path)
+            worldPoints.Add(graph.nodes[nodeIndex].transform.position);
+
+        // Step 5 — Render the path
+        pathRenderer.RenderPath(worldPoints);
     }
 
-    void DrawPath(List<NavigationNode> path)
+    private int FindNearestNode(Vector3 userPosition)
     {
-        if (path == null || path.Count == 0) return;
+        float bestDist = Mathf.Infinity;
+        int bestIndex = 0;
 
-        lineRenderer.positionCount = path.Count;
+        for (int i = 0; i < graph.nodes.Count; i++)
+        {
+            float dist = Vector3.Distance(userPosition, graph.nodes[i].transform.position);
+            if (dist < bestDist)
+            {
+                bestDist = dist;
+                bestIndex = i;
+            }
+        }
 
-        for (int i = 0; i < path.Count; i++)
-            lineRenderer.SetPosition(i, path[i].position);
+        return bestIndex;
     }
+
 }

@@ -1,66 +1,62 @@
-using UnityEngine;
 using System.Collections.Generic;
-using System.Linq;
+using UnityEngine;
 
 public class NavigationGraph : MonoBehaviour
 {
     public List<NavigationNode> nodes = new List<NavigationNode>();
 
-    public NavigationNode GetNearestNode(Vector3 position)
+    public int GetNodeIndexFromPOI(Transform poi)
     {
-        NavigationNode best = null;
-        float bestDist = Mathf.Infinity;
-
-        foreach (var n in nodes)
+        for (int i = 0; i < nodes.Count; i++)
         {
-            float dist = Vector3.Distance(position, n.transform.position);
-            if (dist < bestDist)
-            {
-                bestDist = dist;
-                best = n;
-            }
+            if (nodes[i].linkedPOI == poi)
+                return i;
         }
-        return best;
+        return -1;
     }
 
-    public List<NavigationNode> FindPath(NavigationNode start, NavigationNode goal)
+    // BFS for shortest path
+    public List<int> FindPath(int startIndex, int endIndex)
     {
-        Queue<NavigationNode> queue = new Queue<NavigationNode>();
-        Dictionary<NavigationNode, NavigationNode> cameFrom = new Dictionary<NavigationNode, NavigationNode>();
+        Queue<int> queue = new Queue<int>();
+        Dictionary<int, int> visited = new Dictionary<int, int>();
 
-        queue.Enqueue(start);
-        cameFrom[start] = null;
+        queue.Enqueue(startIndex);
+        visited[startIndex] = -1;
 
         while (queue.Count > 0)
         {
-            var current = queue.Dequeue();
+            int current = queue.Dequeue();
 
-            if (current == goal)
-                return ReconstructPath(cameFrom, current);
+            if (current == endIndex)
+                return BuildPath(visited, endIndex);
 
-            foreach (var nb in current.neighbours)
+            foreach (var neighbor in nodes[current].neighbors)
             {
-                if (!cameFrom.ContainsKey(nb))
+                int nextIndex = nodes.IndexOf(neighbor);
+
+                if (!visited.ContainsKey(nextIndex))
                 {
-                    queue.Enqueue(nb);
-                    cameFrom[nb] = current;
+                    visited[nextIndex] = current;
+                    queue.Enqueue(nextIndex);
                 }
             }
         }
 
-        return null;
+        return new List<int>();
     }
 
-    List<NavigationNode> ReconstructPath(Dictionary<NavigationNode, NavigationNode> cameFrom,
-                                         NavigationNode cur)
+    private List<int> BuildPath(Dictionary<int, int> visited, int endIndex)
     {
-        List<NavigationNode> path = new List<NavigationNode>();
-        while (cur != null)
+        List<int> path = new List<int>();
+        int current = endIndex;
+
+        while (current != -1)
         {
-            path.Add(cur);
-            cur = cameFrom[cur];
+            path.Insert(0, current);
+            current = visited[current];
         }
-        path.Reverse();
+
         return path;
     }
 }

@@ -1,8 +1,8 @@
-using System.Collections.Generic;
 using UnityEngine;
+using System.Collections.Generic;
 
 public class NavigationNode : MonoBehaviour
 {
-    public Vector3 position;
-    public List<NavigationNode> neighbours = new List<NavigationNode>();
+    public Transform linkedPOI;  // The POI this node belongs to
+    public List<NavigationNode> neighbors = new List<NavigationNode>();
 }
