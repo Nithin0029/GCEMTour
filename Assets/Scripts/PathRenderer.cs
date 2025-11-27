@@ -3,43 +3,64 @@ using UnityEngine;
 
 public class PathRenderer : MonoBehaviour
 {
-    [Header("Arrow / Indicator Prefab")]
-    public GameObject arrowPrefab;
-
-    [Header("Spacing between arrows")]
-    public float spacing = 0.5f;
+    [Header("Arrow Settings")]
+    public GameObject arrowPrefab;     // the arrow to place on path
+    public float arrowSpacing = 1.0f;  // spacing between arrows
 
     private List<GameObject> spawnedArrows = new List<GameObject>();
 
-    public void RenderPath(List<Vector3> worldPoints)
+    /// <summary>
+    /// Renders the navigation path using arrow prefabs.
+    /// </summary>
+    public void RenderPath(List<Vector3> points)
     {
         ClearPath();
 
-        for (int i = 0; i < worldPoints.Count - 1; i++)
+        if (points == null || points.Count < 2)
+            return;
+
+        Vector3 previous = points[0];
+
+        for (int i = 1; i < points.Count; i++)
         {
-            Vector3 start = worldPoints[i];
-            Vector3 end = worldPoints[i + 1];
-            float dist = Vector3.Distance(start, end);
+            Vector3 current = points[i];
 
-            int steps = Mathf.FloorToInt(dist / spacing);
+            // Compute total distance between nodes
+            float distance = Vector3.Distance(previous, current);
 
-            for (int s = 0; s <= steps; s++)
+            // Number of arrows between the 2 graph nodes
+            int arrowCount = Mathf.FloorToInt(distance / arrowSpacing);
+
+            for (int a = 0; a <= arrowCount; a++)
             {
-                float t = (float)s / steps;
-                Vector3 pos = Vector3.Lerp(start, end, t);
+                float t = (float)a / arrowCount;
+                Vector3 position = Vector3.Lerp(previous, current, t);
 
-                Quaternion rot = Quaternion.LookRotation(end - start);
+                // Spawn arrow
+                GameObject arrow = Instantiate(arrowPrefab, position, Quaternion.identity, transform);
 
-                GameObject arrow = Instantiate(arrowPrefab, pos, rot);
+                // Rotate arrow to face next point
+                Vector3 direction = (current - previous).normalized;
+                if (direction != Vector3.zero)
+                    arrow.transform.rotation = Quaternion.LookRotation(direction);
+
                 spawnedArrows.Add(arrow);
             }
+
+            previous = current;
         }
     }
 
+    /// <summary>
+    /// Removes previously spawned arrows.
+    /// </summary>
     public void ClearPath()
     {
-        foreach (GameObject obj in spawnedArrows)
-            Destroy(obj);
+        foreach (GameObject arrow in spawnedArrows)
+        {
+            if (arrow != null)
+                Destroy(arrow);
+        }
 
         spawnedArrows.Clear();
     }
