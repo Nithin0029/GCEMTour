@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+ï»¿using System.Collections.Generic;
 using UnityEngine;
 
 public class NavigationManager : MonoBehaviour
@@ -35,10 +35,10 @@ public class NavigationManager : MonoBehaviour
             return;
         }
 
-        // Step 1 — Find nearest node to the user (AR Camera)
+        // Step 1 â€” Find nearest node to the user (AR Camera)
         int startIndex = FindNearestNode(Camera.main.transform.position);
 
-        // Step 2 — Find the graph node connected to this POI
+        // Step 2 â€” Find the graph node connected to this POI
         int endIndex = graph.GetNodeIndexFromPOI(destinationPOI);
 
         if (endIndex == -1)
@@ -47,7 +47,7 @@ public class NavigationManager : MonoBehaviour
             return;
         }
 
-        // Step 3 — Get shortest path from Graph
+        // Step 3 â€” Get shortest path from Graph
         List<int> path = graph.FindPath(startIndex, endIndex);
 
         if (path == null || path.Count == 0)
@@ -56,12 +56,12 @@ public class NavigationManager : MonoBehaviour
             return;
         }
 
-        // Step 4 — Convert node list to world positions
+        // Step 4 â€” Convert node list to world positions
         List<Vector3> worldPoints = new List<Vector3>();
         foreach (int nodeIndex in path)
             worldPoints.Add(graph.nodes[nodeIndex].transform.position);
 
-        // Step 5 — Render the path
+        // Step 5 â€” Render the path
         pathRenderer.RenderPath(worldPoints);
     }
 

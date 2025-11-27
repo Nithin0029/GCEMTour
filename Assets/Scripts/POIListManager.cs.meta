@@ -3,7 +3,11 @@ guid: 3e1a03ed5fd0f3741a9dc40c9b9f17eb
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - POIsParent: {instanceID: 0}
+  - POIButtonPrefab: {fileID: 3110092214507478619, guid: c5531aad88d5f4c41881bd0d0adaa8ec, type: 3}
+  - ContentParent: {instanceID: 0}
+  - navManager: {instanceID: 0}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 
